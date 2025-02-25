@@ -1,6 +1,7 @@
 import pygame
 import argparse
 import math
+import time
 import colors
 from queue import PriorityQueue
 
@@ -91,6 +92,7 @@ def reconstruct_path(came_from, current, draw):
         draw()
 
 def algorithm(draw, grid, start_pos, end_pos, heurisitc):
+    start_time = time.time() # Start timer
     count = 0
     open_set = PriorityQueue()
     open_set.put((0, count, start_pos)) # Start with the start node in the open set
@@ -113,6 +115,8 @@ def algorithm(draw, grid, start_pos, end_pos, heurisitc):
         if current == end_pos:
             reconstruct_path(came_from, end_pos, draw)
             end_pos.set_end()
+            end_time = time.time()
+            print(f"Path successfully found. Algorithm execution time: {end_time - start_time:.4f} seconds")
             return True
         
         for neighbor in current.neighbors:
@@ -133,6 +137,8 @@ def algorithm(draw, grid, start_pos, end_pos, heurisitc):
         if current != start_pos:
             current.set_closed()
 
+    end_time = time.time()
+    print(f"Unable to find a path. Algorithm execution time: {end_time - start_time:.4f} seconds")
     return False
 
 def make_grid(rows, width):
