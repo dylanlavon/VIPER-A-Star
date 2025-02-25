@@ -4,7 +4,7 @@ The goal of this project is to develop an understanding of pathfinding algorithm
 
 ## To Do:
 - [x] Add a timer
-- [ ] Support diagonal movement
+- [x] Support diagonal movement
 - [ ] Add octile heuristic
 - [ ] Add edge weights
 - [ ] Heightmap-to-pathfinding-map-data converter
