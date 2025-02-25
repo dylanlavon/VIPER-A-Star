@@ -64,14 +64,19 @@ class Node:
 
     def update_neighbors(self, grid):
         self.neighbors = []
-        if self.row < self.total_rows - 1 and not grid[self.row + 1][self.col].is_barrier(): # Down
-            self.neighbors.append(grid[self.row + 1][self.col])
-        if self.row > 0 and not grid[self.row - 1][self.col].is_barrier(): # Up
-            self.neighbors.append(grid[self.row - 1][self.col])
-        if self.col < self.total_rows - 1 and not grid[self.row][self.col + 1].is_barrier(): # Right
-            self.neighbors.append(grid[self.row][self.col + 1])
-        if self.col > 0 and not grid[self.row][self.col - 1].is_barrier(): # Left
-            self.neighbors.append(grid[self.row][self.col - 1 ])
+        directions = [
+            (1, 0), (-1, 0), (0, 1), (0, -1),  # Cardinal directions
+            (1, 1), (1, -1), (-1, 1), (-1, -1)  # Diagonal directions
+        ]
+        for drow, dcol in directions:
+            new_row, new_col = self.row + drow, self.col + dcol
+            if 0 <= new_row < self.total_rows and 0 <= new_col < self.total_rows:
+                if abs(drow) + abs(dcol) == 2:  # Diagonal movement
+                    if not grid[new_row][new_col].is_barrier() and not (grid[self.row][new_col].is_barrier() or grid[new_row][self.col].is_barrier()):
+                        self.neighbors.append(grid[new_row][new_col])
+                else:
+                    if not grid[new_row][new_col].is_barrier():
+                        self.neighbors.append(grid[new_row][new_col])
 
     def __lt__(self, other):
         return False
@@ -120,7 +125,8 @@ def algorithm(draw, grid, start_pos, end_pos, heurisitc):
             return True
         
         for neighbor in current.neighbors:
-            temp_g_score = g_score[current] + 1
+            # Determine g_score based on cardinal/diagonal
+            temp_g_score = g_score[current] + (1 if abs(neighbor.row - current.row) + abs(neighbor.col - current.col) == 1 else math.sqrt(2))
 
             if temp_g_score < g_score[neighbor]:
                 came_from[neighbor] = current
