@@ -13,10 +13,14 @@ args = parser.parse_args()
 # Save the new downscaled image
 out_image_path = os.path.join("maps", args.source_img + ".out.png")
 
-# Open and downscale the source image
+# Open the image and check that its square
 source_image_path = os.path.join("source_images", args.source_img + ".png")
 image = Image.open(source_image_path).convert("RGB")
-resized_image = image.resize((int(args.size), int(args.size)))
+if image.width != image.height:
+    print(f"ERR: Source image is not a square.\nWidth: {image.width}\nHeight: {image.height}")
+
+# Scale down the image
+resized_image = image.resize((args.size, args.size))
 
 # Convert to barrier/free nodes
 if args.binary:
