@@ -87,11 +87,14 @@ class Node:
 def h(n1, n2, heuristic):
     x1, y1 = n1
     x2, y2 = n2
+    dx, dy = abs(x1 - x2), abs(y1 - y2)
 
     if heuristic.lower() == "manhattan":
-        return abs(x1 - x2) + abs(y1 - y2)
+        return dx + dy
     elif heuristic.lower() == "euclidean":
-        return (x1 - x2) ** 2 + (y1 - y2) ** 2
+        return math.sqrt(dx ** 2 + dy ** 2)
+    elif heuristic.lower() == "octile":
+        return max(dx, dy) + (math.sqrt(2) - 1) * min(dx, dy)
 
 def reconstruct_path(came_from, current, draw):
     while current in came_from:
@@ -185,7 +188,7 @@ def get_clicked_pos(pos, rows, width):
 
 def main(win, width):
     parser = argparse.ArgumentParser()
-    parser.add_argument("heuristic", type=str, choices=["manhattan", "euclidean"], help="Choose the heuristic function.")
+    parser.add_argument("heuristic", type=str, choices=["manhattan", "euclidean", "octile"], help="Choose the heuristic function.")
     parser.add_argument("--size", type=int, default=50, help="Grid size. Grid is square, so 'size' value will apply to height AND width of the grid.")
     parser.add_argument("--use_map", type=str, help="Choose an image to use for a predefined map. Image dimensions required to match grid size. Overrides --size.")
     args = parser.parse_args()
