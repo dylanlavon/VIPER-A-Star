@@ -1,6 +1,7 @@
 from PIL import Image
 import argparse
 import os
+import colors
 
 # Setup args
 parser = argparse.ArgumentParser()
@@ -10,11 +11,11 @@ parser.add_argument("--binary", type=float, help="For conversions with only barr
 args = parser.parse_args()
 
 # Save the new downscaled image
-out_image_path = os.path.join("output_images", args.source_img + ".out.png")
+out_image_path = os.path.join("maps", args.source_img + ".out.png")
 
 # Open and downscale the source image
 source_image_path = os.path.join("source_images", args.source_img + ".png")
-image = Image.open(source_image_path).convert("RGBA")
+image = Image.open(source_image_path).convert("RGB")
 resized_image = image.resize((int(args.size), int(args.size)))
 
 # Convert to barrier/free nodes
@@ -27,7 +28,7 @@ if args.binary:
     resized_image = resized_image.convert("L")  # Convert to grayscale
 
     # Get pixel access
-    bw_image = Image.new("RGBA", resized_image.size)  # Create a new blank image
+    bw_image = Image.new("RGB", resized_image.size)  # Create a new blank image
     pixels = bw_image.load()
     gray_pixels = resized_image.load()
 
@@ -36,9 +37,9 @@ if args.binary:
         for x in range(resized_image.width):
             brightness = gray_pixels[x, y]  # Get grayscale intensity (0-255)
             if brightness < 255 * args.binary:
-                pixels[x, y] = (0, 0, 0, 255)  # Black
+                pixels[x, y] = colors.BLACK
             else:
-                pixels[x, y] = (255, 255, 255, 255)  # White
+                pixels[x, y] = colors.WHITE
     bw_image.save(out_image_path)
     quit()
     

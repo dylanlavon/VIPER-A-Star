@@ -3,10 +3,13 @@ import argparse
 import math
 import time
 import colors
+import os
+from PIL import Image
 from queue import PriorityQueue
 
-WIDTH = 800
+WIDTH = 1000
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
+MAPS_DIR = "maps"
 pygame.display.set_caption("A* Pathfinding Algorithm")
 
 class Node:
@@ -182,18 +185,36 @@ def get_clicked_pos(pos, rows, width):
 
 def main(win, width):
     parser = argparse.ArgumentParser()
-    parser.add_argument("heuristic", choices=["manhattan", "euclidean"], help="Choose the heuristic function.")
+    parser.add_argument("heuristic", type=str, choices=["manhattan", "euclidean"], help="Choose the heuristic function.")
+    parser.add_argument("--size", type=int, default=50, help="Grid size. Grid is square, so 'size' value will apply to height AND width of the grid.")
+    parser.add_argument("--use_map", type=str, help="Choose an image to use for a predefined map. Image dimensions required to match grid size. Overrides --size.")
     args = parser.parse_args()
-
-    ROWS = 50
-    grid = make_grid(ROWS, width)
 
     start_pos = None
     end_pos = None
     run = True
 
+    # Open a map file and set the grid size
+    if args.use_map:
+        map_path = os.path.join(MAPS_DIR, args.use_map) 
+        if not os.path.exists(map_path):
+            print(f"ERR: Could not find the map image at: {args.use_map}")
+            quit()
+        map_img = Image.open(map_path)
+        args.size = map_img.width
+
+    grid = make_grid(args.size, width)
+
+    # Set the grid using the specified map data.
+    if args.use_map:
+        map_pixels = Image.open(map_path).load()
+        for y in range(map_img.height):
+            for x in range(map_img.width):
+                if map_pixels[x,y] == colors.BLACK:
+                    grid[x][y].set_barrier()
+
     while run:
-        draw(WIN, grid, ROWS, width)
+        draw(WIN, grid, args.size, width)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -201,7 +222,7 @@ def main(win, width):
             # If LMB pressed
             if pygame.mouse.get_pressed()[0]:
                 pos = pygame.mouse.get_pos()
-                row, col = get_clicked_pos(pos, ROWS, width)
+                row, col = get_clicked_pos(pos, args.size, width)
                 node = grid[row][col]
                 if not start_pos and node != end_pos:
                     start_pos = node
@@ -215,7 +236,7 @@ def main(win, width):
             # If RMB pressed
             elif pygame.mouse.get_pressed()[2]:
                 pos = pygame.mouse.get_pos()
-                row, col = get_clicked_pos(pos, ROWS, width)
+                row, col = get_clicked_pos(pos, args.size, width)
                 node = grid[row][col]
                 node.reset()
                 if node == start_pos:
@@ -228,12 +249,12 @@ def main(win, width):
                     for row in grid:
                         for node in row:
                             node.update_neighbors(grid)
-                    algorithm(lambda: draw(win, grid, ROWS, width), grid, start_pos, end_pos, args.heuristic) 
+                    algorithm(lambda: draw(win, grid, args.size, width), grid, start_pos, end_pos, args.heuristic) 
 
                 if event.key == pygame.K_c:
                     start_pos = None
                     end_pos = None
-                    grid = make_grid(ROWS, width)
+                    grid = make_grid(args.size, width)
 
     pygame.quit()
 
