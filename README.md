@@ -5,10 +5,10 @@ The goal of this project is to develop an understanding of pathfinding algorithm
 ## To Do:
 - [x] Add a timer
 - [x] Support diagonal movement
-- [ ] Add octile heuristic
+- [x] Add octile heuristic
 - [ ] Add edge weights
-- [ ] Heightmap-to-pathfinding-map-data converter
-- [ ] Load pathfinding map data from a file
+- [x] Heightmap-to-pathfinding-map-data converter
+- [x] Load pathfinding map data from a file
 - [ ] No-visualization mode / Only show final path
 <br><br>
 ## Using astar.py
