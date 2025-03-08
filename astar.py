@@ -65,12 +65,17 @@ class Node:
     def draw(self, win):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.width))
 
-    def update_neighbors(self, grid):
+    def update_neighbors(self, grid, heuristic):
         self.neighbors = []
-        directions = [
-            (1, 0), (-1, 0), (0, 1), (0, -1),  # Cardinal directions
-            (1, 1), (1, -1), (-1, 1), (-1, -1)  # Diagonal directions
-        ]
+        if heuristic == "manhattan":
+            directions = [
+                (1, 0), (-1, 0), (0, 1), (0, -1)  # Cardinal directions only
+            ]
+        else:
+            directions = [
+                (1, 0), (-1, 0), (0, 1), (0, -1),  # Cardinal directions
+                (1, 1), (1, -1), (-1, 1), (-1, -1)  # Diagonal directions
+            ]
         for drow, dcol in directions:
             new_row, new_col = self.row + drow, self.col + dcol
             if 0 <= new_row < self.total_rows and 0 <= new_col < self.total_rows:
@@ -105,6 +110,7 @@ def reconstruct_path(came_from, current, draw):
 def algorithm(draw, grid, start_pos, end_pos, heurisitc):
     start_time = time.time() # Start timer
     count = 0
+    nodes_explored = 0
     open_set = PriorityQueue()
     open_set.put((0, count, start_pos)) # Start with the start node in the open set
     came_from = {}
@@ -122,17 +128,21 @@ def algorithm(draw, grid, start_pos, end_pos, heurisitc):
         
         current = open_set.get()[2]
         open_set_hash.remove(current)
+        nodes_explored += 1
 
         if current == end_pos:
             reconstruct_path(came_from, end_pos, draw)
             end_pos.set_end()
             end_time = time.time()
-            print(f"Path successfully found. Algorithm execution time: {end_time - start_time:.4f} seconds")
+            print(f"\nPath successfully found.\nExecution time: {end_time - start_time:.4f} seconds\nTotal path cost: {g_score[end_pos]:.4f}\nTotal spaces explored: {nodes_explored}")
             return True
         
         for neighbor in current.neighbors:
             # Determine g_score based on cardinal/diagonal
-            temp_g_score = g_score[current] + (1 if abs(neighbor.row - current.row) + abs(neighbor.col - current.col) == 1 else math.sqrt(2))
+            if heurisitc == "manhattan":
+                temp_g_score = g_score[current] + 1
+            else:
+                temp_g_score = g_score[current] + (1 if abs(neighbor.row - current.row) + abs(neighbor.col - current.col) == 1 else math.sqrt(2))
 
             if temp_g_score < g_score[neighbor]:
                 came_from[neighbor] = current
@@ -150,7 +160,7 @@ def algorithm(draw, grid, start_pos, end_pos, heurisitc):
             current.set_closed()
 
     end_time = time.time()
-    print(f"Unable to find a path. Algorithm execution time: {end_time - start_time:.4f} seconds")
+    print(f"\nUnable to find a path.\nExecution time: {end_time - start_time:.4f} seconds\nTotal spaces explored: {nodes_explored}")
     return False
 
 def make_grid(rows, width):
@@ -251,7 +261,7 @@ def main(win, width):
                 if event.key == pygame.K_SPACE and start_pos and end_pos:
                     for row in grid:
                         for node in row:
-                            node.update_neighbors(grid)
+                            node.update_neighbors(grid, args.heuristic)
                     algorithm(lambda: draw(win, grid, args.size, width), grid, start_pos, end_pos, args.heuristic) 
 
                 if event.key == pygame.K_c:
