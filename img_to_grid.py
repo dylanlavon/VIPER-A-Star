@@ -11,11 +11,13 @@ parser.add_argument("--binary", type=float, help="For conversions with only barr
 parser.add_argument("--fivesplit", type=int, nargs="+", help="For conversions with 4 edge weights and barrier nodes. Use five values from 0-255 to determine the ranges for which between them edge weights are determined.")
 args = parser.parse_args()
 
+source_img_stripped = os.path.splitext(args.source_img)[0]
+
 # Save the new downscaled image
-out_image_path = os.path.join("maps", args.source_img + ".out.png")
+out_image_path = os.path.join("maps", source_img_stripped + ".out.png")
 
 # Open the image and check that its square
-source_image_path = os.path.join("source_images", args.source_img + ".png")
+source_image_path = os.path.join("source_images", args.source_img)
 image = Image.open(source_image_path).convert("RGB")
 if image.width != image.height:
     print(f"ERR: Source image is not a square.\nWidth: {image.width}\nHeight: {image.height}")
