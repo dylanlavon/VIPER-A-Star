@@ -53,6 +53,18 @@ class Node:
     def set_barrier(self):
         self.color = colors.BLACK
 
+    def set_fivesplit1(self):
+        self.color = colors.FIVESPLIT_1
+    
+    def set_fivesplit2(self):
+        self.color = colors.FIVESPLIT_2
+
+    def set_fivesplit3(self):
+        self.color = colors.FIVESPLIT_3
+
+    def set_fivesplit4(self):
+        self.color = colors.FIVESPLIT_4
+
     def set_start(self):
         self.color = colors.ORANGE
     
@@ -97,11 +109,12 @@ def h(n1, n2, heuristic):
     if heuristic.lower() == "manhattan":
         return dx + dy
     elif heuristic.lower() == "euclidean":
-        return math.sqrt(dx ** 2 + dy ** 2)
+        return dx ** 2 + dy ** 2
     elif heuristic.lower() == "octile":
         return max(dx, dy) + (math.sqrt(2) - 1) * min(dx, dy)
 
 def reconstruct_path(came_from, current, draw):
+    
     while current in came_from:
         current = came_from[current]
         current.set_path()
@@ -135,14 +148,37 @@ def algorithm(draw, grid, start_pos, end_pos, heurisitc):
             end_pos.set_end()
             end_time = time.time()
             print(f"\nPath successfully found.\nExecution time: {end_time - start_time:.4f} seconds\nTotal path cost: {g_score[end_pos]:.4f}\nTotal spaces explored: {nodes_explored}")
+
+            # Admissibility check: heuristic(start) should not be greater than actual cost
+            true_cost = g_score[end_pos]
+            h_start = h(start_pos.get_pos(), end_pos.get_pos(), heurisitc)
+
+            if h_start > true_cost + 1e-5:
+                print(f"NOT ADMISSIBLE! Heuristic from start ({start_pos.get_pos()}) "
+                    f"overestimates cost. h(start): {h_start:.4f}, true_cost: {true_cost:.4f}")
+            else:
+                print(f"Heuristic appears ADMISSIBLE. h(start): {h_start:.4f}, true_cost: {true_cost:.4f}")
+
             return True
         
         for neighbor in current.neighbors:
             # Determine g_score based on cardinal/diagonal
-            if heurisitc == "manhattan":
-                temp_g_score = g_score[current] + 1
-            else:
-                temp_g_score = g_score[current] + (1 if abs(neighbor.row - current.row) + abs(neighbor.col - current.col) == 1 else math.sqrt(2))
+            if heurisitc == "manhattan": 
+                move_cost = 1
+            else: 
+                move_cost = 1 if abs(neighbor.row - current.row) + abs(neighbor.col - current.col) == 1 else math.sqrt(2)
+            
+            temp_g_score = g_score[current] + move_cost
+
+            # Get heuristic values
+            h_current = h(current.get_pos(), end_pos.get_pos(), heurisitc)
+            h_neighbor = h(neighbor.get_pos(), end_pos.get_pos(), heurisitc)
+
+            # Consistency check: h(current) <= move_cost + h(neighbor)
+            if h_current > move_cost + h_neighbor + 1e-5:  # Add epsilon for float precision
+                print(f"INCONSISTENT! At node {current.get_pos()} to {neighbor.get_pos()}: "
+                    f"h(current): {h_current:.4f}, move_cost: {move_cost:.4f}, "
+                    f"h(neighbor): {h_neighbor:.4f}")
 
             if temp_g_score < g_score[neighbor]:
                 came_from[neighbor] = current
