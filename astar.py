@@ -109,7 +109,7 @@ def h(n1, n2, heuristic):
     if heuristic.lower() == "manhattan":
         return dx + dy
     elif heuristic.lower() == "euclidean":
-        return dx ** 2 + dy ** 2
+        return math.sqrt(dx ** 2 + dy ** 2)
     elif heuristic.lower() == "octile":
         return max(dx, dy) + (math.sqrt(2) - 1) * min(dx, dy)
 
