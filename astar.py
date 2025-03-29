@@ -22,6 +22,7 @@ class Node:
         self.y = col * width
         self.color = colors.WHITE
         self.neighbors = []
+        self.extra_cost = 0
         
     def get_pos(self):
         return self.row, self.col
@@ -55,6 +56,7 @@ class Node:
     
     def reset(self):
         self.color = colors.WHITE
+        self.extra_cost = 0
 
     def set_closed(self):
         self.color = colors.RED
@@ -67,15 +69,19 @@ class Node:
 
     def set_fivesplit1(self):
         self.color = colors.FIVESPLIT_1
+        self.extra_cost = 1
     
     def set_fivesplit2(self):
         self.color = colors.FIVESPLIT_2
+        self.extra_cost = 2
 
     def set_fivesplit3(self):
         self.color = colors.FIVESPLIT_3
+        self.extra_cost = 3
 
     def set_fivesplit4(self):
         self.color = colors.FIVESPLIT_4
+        self.extra_cost = 4
 
     def set_start(self):
         self.color = colors.ORANGE
@@ -85,17 +91,6 @@ class Node:
 
     def set_path(self):
         self.color = colors.PURPLE
-
-    def get_extra_cost(self):
-        if self.is_fivesplit1():
-            return 1
-        elif self.is_fivesplit2():
-            return 2
-        elif self.is_fivesplit3():
-            return 3
-        elif self.is_fivesplit4():
-            return 4
-        return 0  # Default cost if not a weighted area
 
     def draw(self, win):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.width))
@@ -191,10 +186,9 @@ def algorithm(draw, grid, start_pos, end_pos, heurisitc):
             else: 
                 move_cost = 1 if abs(neighbor.row - current.row) + abs(neighbor.col - current.col) == 1 else math.sqrt(2)
 
-            extra_cost = neighbor.get_extra_cost()
-            print(f'move cost: {move_cost}, extra cost: {extra_cost}, color: {neighbor.color}')
+            print(f'move cost: {move_cost}, extra cost: {neighbor.extra_cost}, color: {neighbor.color}')
             
-            temp_g_score = g_score[current] + move_cost + extra_cost
+            temp_g_score = g_score[current] + move_cost + neighbor.extra_cost
 
             # Get heuristic values
             h_current = h(current.get_pos(), end_pos.get_pos(), heurisitc)
