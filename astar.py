@@ -23,6 +23,8 @@ class Node:
         self.color = colors.WHITE
         self.neighbors = []
         self.extra_cost = 0
+        self.prev_color = self.color
+        self.node_type = "untraversed"
         
     def get_pos(self):
         return self.row, self.col
@@ -54,43 +56,57 @@ class Node:
     def is_end(self):
         return self.color == colors.TURQUOISE
     
+    def is_path(self):
+        return self.color == colors.PURPLE
+    
     def reset(self):
         self.color = colors.WHITE
         self.extra_cost = 0
+        self.node_type = "untraversed"
 
     def set_closed(self):
         self.color = colors.RED
+        self.node_type = "traversed"
 
     def set_open(self):
         self.color = colors.GREEN
+        self.node_type = "traversed"
     
     def set_barrier(self):
         self.color = colors.BLACK
+        self.node_type = "barrier"
 
     def set_fivesplit1(self):
         self.color = colors.FIVESPLIT_1
         self.extra_cost = 1
+        self.node_type = "untraversed"
     
     def set_fivesplit2(self):
         self.color = colors.FIVESPLIT_2
         self.extra_cost = 2
+        self.node_type = "untraversed"
 
     def set_fivesplit3(self):
         self.color = colors.FIVESPLIT_3
         self.extra_cost = 3
+        self.node_type = "untraversed"
 
     def set_fivesplit4(self):
         self.color = colors.FIVESPLIT_4
         self.extra_cost = 4
+        self.node_type = "untraversed"
 
     def set_start(self):
         self.color = colors.ORANGE
+        self.node_type = "path"
     
     def set_end(self):
         self.color = colors.TURQUOISE
+        self.node_type = "path"
 
     def set_path(self):
         self.color = colors.PURPLE
+        self.node_type = "path"
 
     def draw(self, win):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.width))
@@ -131,12 +147,32 @@ def h(n1, n2, heuristic):
     elif heuristic.lower() == "octile":
         return max(dx, dy) + (math.sqrt(2) - 1) * min(dx, dy)
 
-def reconstruct_path(came_from, current, draw):
-    
+def reconstruct_path(came_from, current, draw, start_pos):
     while current in came_from:
+        if came_from[current] == start_pos:
+            break  # Stop before setting the start node as path
         current = came_from[current]
         current.set_path()
         draw()
+
+def toggle_search_area(grid):
+        for row in grid:
+            for node in row:
+                if node.node_type == "traversed":
+                    if node.color == colors.GREEN or node.color == colors.RED:
+                        node.prev_color = node.color
+                        if node.extra_cost == 0:
+                            node.color = colors.WHITE
+                        elif node.extra_cost == 1:
+                            node.color = colors.FIVESPLIT_1
+                        elif node.extra_cost == 2:
+                            node.color = colors.FIVESPLIT_2
+                        elif node.extra_cost == 3:
+                            node.color = colors.FIVESPLIT_3
+                        elif node.extra_cost == 4:
+                            node.color = colors.FIVESPLIT_4
+                    else:
+                        node.color = node.prev_color
 
 def algorithm(draw, grid, start_pos, end_pos, heurisitc):
     start_time = time.time() # Start timer
@@ -162,7 +198,7 @@ def algorithm(draw, grid, start_pos, end_pos, heurisitc):
         nodes_explored += 1
 
         if current == end_pos:
-            reconstruct_path(came_from, end_pos, draw)
+            reconstruct_path(came_from, end_pos, draw, start_pos)
             end_pos.set_end()
             end_time = time.time()
             print(f"\nPath successfully found.\nExecution time: {end_time - start_time:.4f} seconds\nTotal path cost: {g_score[end_pos]:.4f}\nTotal spaces explored: {nodes_explored}")
@@ -185,9 +221,8 @@ def algorithm(draw, grid, start_pos, end_pos, heurisitc):
                 move_cost = 1
             else: 
                 move_cost = 1 if abs(neighbor.row - current.row) + abs(neighbor.col - current.col) == 1 else math.sqrt(2)
-
-            print(f'move cost: {move_cost}, extra cost: {neighbor.extra_cost}, color: {neighbor.color}')
             
+            # Make sure to add extra edge weights based on node color
             temp_g_score = g_score[current] + move_cost + neighbor.extra_cost
 
             # Get heuristic values
@@ -252,6 +287,21 @@ def get_clicked_pos(pos, rows, width):
     col = x // gap
     return row, col
 
+def load_map(grid, map_path, map_img):
+    map_pixels = Image.open(map_path).load()
+    for y in range(map_img.height):
+        for x in range(map_img.width):
+            if map_pixels[x,y] == colors.BLACK:
+                grid[x][y].set_barrier() 
+            elif map_pixels[x,y] == colors.FIVESPLIT_4:
+                grid[x][y].set_fivesplit4()
+            elif map_pixels[x,y] == colors.FIVESPLIT_3:
+                grid[x][y].set_fivesplit3()
+            elif map_pixels[x,y] == colors.FIVESPLIT_2:
+                grid[x][y].set_fivesplit2()
+            elif map_pixels[x,y] == colors.FIVESPLIT_1:
+                grid[x][y].set_fivesplit1()
+
 def main(win, width):
     parser = argparse.ArgumentParser()
     parser.add_argument("heuristic", type=str, choices=["manhattan", "euclidean", "octile"], help="Choose the heuristic function.")
@@ -276,19 +326,7 @@ def main(win, width):
 
     # Set the grid using the specified map data.
     if args.use_map:
-        map_pixels = Image.open(map_path).load()
-        for y in range(map_img.height):
-            for x in range(map_img.width):
-                if map_pixels[x,y] == colors.BLACK:
-                    grid[x][y].set_barrier() 
-                elif map_pixels[x,y] == colors.FIVESPLIT_4:
-                    grid[x][y].set_fivesplit4()
-                elif map_pixels[x,y] == colors.FIVESPLIT_3:
-                    grid[x][y].set_fivesplit3()
-                elif map_pixels[x,y] == colors.FIVESPLIT_2:
-                    grid[x][y].set_fivesplit2()
-                elif map_pixels[x,y] == colors.FIVESPLIT_1:
-                   grid[x][y].set_fivesplit1()
+        load_map(grid, map_path, map_img)
 
     while run:
         draw(WIN, grid, args.size, width)
@@ -328,10 +366,22 @@ def main(win, width):
                             node.update_neighbors(grid, args.heuristic)
                     algorithm(lambda: draw(win, grid, args.size, width), grid, start_pos, end_pos, args.heuristic) 
 
+                # Clear the map
                 if event.key == pygame.K_c:
                     start_pos = None
                     end_pos = None
                     grid = make_grid(args.size, width)
+
+                # Clear the map and reload the map data, if used.
+                if event.key == pygame.K_r:
+                    start_pos = None
+                    end_pos = None
+                    grid = make_grid(args.size, width)
+                    load_map(grid, map_path, map_img)
+
+                # Toggle the search area by swapping open and closed colors with edge weight colors
+                if event.key == pygame.K_t:
+                    toggle_search_area(grid)
 
     pygame.quit()
 
