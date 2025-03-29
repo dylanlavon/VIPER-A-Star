@@ -16,11 +16,10 @@ The goal of this project is to develop an understanding of pathfinding algorithm
 
 In a new grid, the first left click will place the start node (teal). The second left click will place the goal node (orange). Any left clicks after these two nodes are placed will be barrier nodes (black).
 
-Nodes can be erased by using right click.
-
-A grid can be cleared by pressing the "C" key.
-
-If running using a map, pressing "R" will reset to the initial state of that map.
+- Nodes can be erased by using right click.
+- A grid can be cleared by pressing the "C" key.
+- If running using a map, pressing "R" will reset to the initial state of that map.
+- After the algorithm complets, pressing "T" will toggle the search area, and will only show the start, end, and path nodes.
 
 Hitting the spacebar will start the algorithm, as long as the start and goal nodes are placed on the grid.
 
