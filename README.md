@@ -6,7 +6,7 @@ The goal of this project is to develop an understanding of pathfinding algorithm
 - [x] Add a timer
 - [x] Support diagonal movement
 - [x] Add octile heuristic
-- [ ] Add edge weights
+- [x] Add edge weights
 - [x] Heightmap-to-pathfinding-map-data converter
 - [x] Load pathfinding map data from a file
 - [ ] No-visualization mode / Only show final path
@@ -19,6 +19,8 @@ In a new grid, the first left click will place the start node (teal). The second
 Nodes can be erased by using right click.
 
 A grid can be cleared by pressing the "C" key.
+
+If running using a map, pressing "R" will reset to the initial state of that map.
 
 Hitting the spacebar will start the algorithm, as long as the start and goal nodes are placed on the grid.
 
@@ -35,16 +37,19 @@ Arguments:
 ## Using img_to_grid.py
 **Convert a square image into a map for use in astar.py.**
 
-Downscales an image to the specified size, and optionally clamps pixels to black or white using the value provided for the _binary_ flag.
+Downscales an image to the specified size.
 
-For example, if a value supplied for _binary_ is **.5**, any pixel that has a brightness of 128 (50% of the max value, 255, aka white) or higher will be set to white. Otherwise, it will be **black**.
-
-Pixels are required to be **black** to register as barriers in _astar.py_.
+- If using the _binary_ flag, also clamps pixels to blackor white using the value provided. For example, if a value supplied for _binary_ is **.5**, any pixel that has a brightness of 128 (50% of the max value, 255, aka white) or higher will be set to **white**. Otherwise, it will be **black**.
+- If using the _fivesplit_ flag, pixels will be clamped to their respective colors.FIVESPLIT_<**n**> color based on the RGB value range they fall into, as defined by the range created using the different split points.
 
 Arguments: 
 - _source_img_, **required**, positional: Tell the script which image to use in the _source_images_ subdirectory.
 - _size_, **required**, positional: Width/height of the of the new map image. Must be smaller than the original image.
 - _binary_: Threshold used to set pixels to either black (barrier) or white (empty node). A higher value means more barriers. Float value between 0 and 1.
+- _fivesplit_: Indicate five "split points" which divide grayscale (0-255) into varying edge weights. Each divided area closer to black (RGB 0,0,0) has an incremented edge weight, starting at 0. See below (using _--fivesplit 50 80 100 150 200_):
+  ![fivesplit](https://github.com/user-attachments/assets/4a1448fd-f097-46e1-bab2-4002c5020918)
+
+
 
 <br><br>
 ## Resources
