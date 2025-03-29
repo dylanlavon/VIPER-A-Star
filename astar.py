@@ -35,6 +35,18 @@ class Node:
     def is_barrier(self):
         return self.color == colors.BLACK
     
+    def is_fivesplit1(self):
+        return self.color == colors.FIVESPLIT_1
+
+    def is_fivesplit2(self):
+        return self.color == colors.FIVESPLIT_2
+
+    def is_fivesplit3(self):
+        return self.color == colors.FIVESPLIT_3
+
+    def is_fivesplit4(self):
+        return self.color == colors.FIVESPLIT_4
+    
     def is_start(self):
         return self.color == colors.ORANGE
     
@@ -73,6 +85,17 @@ class Node:
 
     def set_path(self):
         self.color = colors.PURPLE
+
+    def get_extra_cost(self):
+        if self.is_fivesplit1():
+            return 1
+        elif self.is_fivesplit2():
+            return 2
+        elif self.is_fivesplit3():
+            return 3
+        elif self.is_fivesplit4():
+            return 4
+        return 0  # Default cost if not a weighted area
 
     def draw(self, win):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.width))
@@ -163,12 +186,15 @@ def algorithm(draw, grid, start_pos, end_pos, heurisitc):
         
         for neighbor in current.neighbors:
             # Determine g_score based on cardinal/diagonal
-            if heurisitc == "manhattan": 
+            if heurisitc.lower() == "manhattan": 
                 move_cost = 1
             else: 
                 move_cost = 1 if abs(neighbor.row - current.row) + abs(neighbor.col - current.col) == 1 else math.sqrt(2)
+
+            extra_cost = neighbor.get_extra_cost()
+            print(f'move cost: {move_cost}, extra cost: {extra_cost}, color: {neighbor.color}')
             
-            temp_g_score = g_score[current] + move_cost
+            temp_g_score = g_score[current] + move_cost + extra_cost
 
             # Get heuristic values
             h_current = h(current.get_pos(), end_pos.get_pos(), heurisitc)
@@ -260,7 +286,15 @@ def main(win, width):
         for y in range(map_img.height):
             for x in range(map_img.width):
                 if map_pixels[x,y] == colors.BLACK:
-                    grid[x][y].set_barrier()
+                    grid[x][y].set_barrier() 
+                elif map_pixels[x,y] == colors.FIVESPLIT_4:
+                    grid[x][y].set_fivesplit4()
+                elif map_pixels[x,y] == colors.FIVESPLIT_3:
+                    grid[x][y].set_fivesplit3()
+                elif map_pixels[x,y] == colors.FIVESPLIT_2:
+                    grid[x][y].set_fivesplit2()
+                elif map_pixels[x,y] == colors.FIVESPLIT_1:
+                   grid[x][y].set_fivesplit1()
 
     while run:
         draw(WIN, grid, args.size, width)
