@@ -11,6 +11,7 @@ WIDTH = 1000
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
 MAPS_DIR = "maps"
 pygame.display.set_caption("A* Pathfinding Algorithm")
+pygame.init()
 
 class Node:
     def __init__(self, row, col, width, total_rows):
@@ -276,8 +277,23 @@ def draw(win, grid, rows, width):
     for row in grid:
         for node in row:
             node.draw(win)
-    
+
     draw_gridlines(win, rows, width)
+
+    # Draw coordinates of hovered node
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+    if 0 <= mouse_x < width and 0 <= mouse_y < width:
+        row, col = get_clicked_pos((mouse_x, mouse_y), rows, width)
+        coord_text = f"({row}, {col})"
+        font = pygame.font.SysFont(None, 24)
+        text_surf = font.render(coord_text, True, (0, 0, 0))
+
+        # Draw at different offset based on mouse x/y to prevent it rendering outside of the window
+        x_offset = -50 if row >= rows / 2 else 15
+        y_offset = -20 if col >= rows / 2 else 10
+        text_rect = text_surf.get_rect(topleft=(mouse_x + x_offset, mouse_y + y_offset))
+        win.blit(text_surf, text_rect)
+    
     pygame.display.update()
 
 def get_clicked_pos(pos, rows, width):
