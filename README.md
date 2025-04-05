@@ -2,6 +2,10 @@
 
 The goal of this project is to develop an understanding of pathfinding algorithms and how they could be used, particularly in an HPC environment, to calculate optimal paths for lunar rovers such as *VIPER*.
 <br><br>
+
+![image](https://github.com/user-attachments/assets/c70ffcf4-3bcb-4368-9cf8-a9408b967010)
+
+
 ## To Do:
 - [x] Add a timer
 - [x] Support diagonal movement
@@ -10,6 +14,7 @@ The goal of this project is to develop an understanding of pathfinding algorithm
 - [x] Heightmap-to-pathfinding-map-data converter
 - [x] Load pathfinding map data from a file
 - [x] No-visualization mode / Only show final path (implemented as --path_only arg)
+- [ ] Find shortest path between multiple goal nodes / nodes of interest
 <br><br>
 ## Using astar.py
 **Runs the A\* Pathfinding visualization.**
