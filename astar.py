@@ -307,34 +307,61 @@ def main(win, width):
     parser.add_argument("heuristic", type=str, choices=["manhattan", "euclidean", "octile"], help="Choose the heuristic function.")
     parser.add_argument("--size", type=int, default=50, help="Grid size. Grid is square, so 'size' value will apply to height AND width of the grid.")
     parser.add_argument("--use_map", type=str, help="Choose an image to use for a predefined map. Image dimensions required to match grid size. Overrides --size.")
+    parser.add_argument("--path_only", type=int, nargs="+", help="Enter two points in the form [X1 Y1 X2 Y2]. Will only display the final path.")
     args = parser.parse_args()
 
     start_pos = None
     end_pos = None
-    run = True
 
-    # Open a map file and set the grid size
     if args.use_map:
-        map_path = os.path.join(MAPS_DIR, args.use_map) 
+        map_path = os.path.join(MAPS_DIR, args.use_map)
         if not os.path.exists(map_path):
             print(f"ERR: Could not find the map image at: {args.use_map}")
             quit()
         map_img = Image.open(map_path)
         args.size = map_img.width
 
+    if args.path_only:
+        if len(args.path_only) != 4:
+            print("ERR: Invalid number of supplied values. Supplied points for --path_only should be in form [X1 Y1 X2 Y2].")
+            quit()
+        for coord in args.path_only:
+            if coord >= args.size or coord < 0:
+                print("ERR: Invalid coord in --path_only. Coord value must be between 0 and the map size.")
+                quit()
+
     grid = make_grid(args.size, width)
 
-    # Set the grid using the specified map data.
     if args.use_map:
         load_map(grid, map_path, map_img)
 
+    if args.path_only:
+        x1, y1, x2, y2 = args.path_only
+        start_pos = grid[x1][y1]
+        start_pos.set_start()
+        end_pos = grid[x2][y2]
+        end_pos.set_end()
+
+        # Update neighbors first
+        for row in grid:
+            for node in row:
+                node.update_neighbors(grid, args.heuristic)
+
+        # Run algorithm with dummy draw function
+        algorithm(lambda: None, grid, start_pos, end_pos, args.heuristic)
+
+        # Now show window and draw final state
+        global WIN
+        WIN = pygame.display.set_mode((width, width))
+        draw(WIN, grid, args.size, width)
+
+    run = True
     while run:
         draw(WIN, grid, args.size, width)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
 
-            # If LMB pressed
             if pygame.mouse.get_pressed()[0]:
                 pos = pygame.mouse.get_pos()
                 row, col = get_clicked_pos(pos, args.size, width)
@@ -348,7 +375,6 @@ def main(win, width):
                 elif node != start_pos and node != end_pos:
                     node.set_barrier()
 
-            # If RMB pressed
             elif pygame.mouse.get_pressed()[2]:
                 pos = pygame.mouse.get_pos()
                 row, col = get_clicked_pos(pos, args.size, width)
@@ -364,22 +390,19 @@ def main(win, width):
                     for row in grid:
                         for node in row:
                             node.update_neighbors(grid, args.heuristic)
-                    algorithm(lambda: draw(win, grid, args.size, width), grid, start_pos, end_pos, args.heuristic) 
+                    algorithm(lambda: draw(WIN, grid, args.size, width), grid, start_pos, end_pos, args.heuristic)
 
-                # Clear the map
                 if event.key == pygame.K_c:
                     start_pos = None
                     end_pos = None
                     grid = make_grid(args.size, width)
 
-                # Clear the map and reload the map data, if used.
                 if event.key == pygame.K_r:
                     start_pos = None
                     end_pos = None
                     grid = make_grid(args.size, width)
                     load_map(grid, map_path, map_img)
 
-                # Toggle the search area by swapping open and closed colors with edge weight colors
                 if event.key == pygame.K_t:
                     toggle_search_area(grid)
 
