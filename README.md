@@ -9,7 +9,7 @@ The goal of this project is to develop an understanding of pathfinding algorithm
 - [x] Add edge weights
 - [x] Heightmap-to-pathfinding-map-data converter
 - [x] Load pathfinding map data from a file
-- [ ] No-visualization mode / Only show final path
+- [x] No-visualization mode / Only show final path (implemented as --path_only arg)
 <br><br>
 ## Using astar.py
 **Runs the A\* Pathfinding visualization.**
@@ -30,7 +30,8 @@ After the algorithm completes, the elapsed time will display in the console outp
 Arguments: 
 - _heuristic_, **required**, positional: Tell the script which heuristic function to use. [manhattan, euclidean, octile]
 - _size_: Width/height of the grid; 50 by default. Will be overwritten by the size of a map if using --use_map.
-- _use_map_: The full name of an image in the _maps_ subdirectory. Defines barrier/empty nodes. Replaces the size of the grid if using _size_. 
+- _use_map_: The full name of an image in the _maps_ subdirectory. Defines barrier/empty nodes. Replaces the size of the grid if using _size_.
+- _path_only_: Supply two node locations in the form [X1 Y1 X2 Y2]. Running using this arg will only render the final path between these two nodes. Can be used with or without loading a map. 
 
 <br><br>
 ## Using img_to_grid.py
