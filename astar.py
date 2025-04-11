@@ -6,6 +6,7 @@ import colors
 import os
 from PIL import Image
 from queue import PriorityQueue
+from collections import deque
 
 WIDTH = 1000
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
@@ -155,6 +156,31 @@ def reconstruct_path(came_from, current, draw, start_pos):
         current = came_from[current]
         current.set_path()
         draw()
+
+def bfs_precheck(start, end):
+    bfs_start_time = time.time()    
+    visited = set()
+    queue = deque([start])
+    
+    is_reachable = False
+    while queue:
+        current = queue.popleft()
+        if current == end:
+            is_reachable = True
+            break
+        for neighbor in current.neighbors:
+            if not neighbor.is_barrier() and neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+
+    bfs_end_time = time.time()
+    bfs_elapsed_time = bfs_end_time - bfs_start_time
+    if not is_reachable:
+        print(f"\nEnd node [{end.row}, {end.col}] is unreachable from start node [{start.row}, {start.col}].")   
+        print(f"BFS pre-check took {bfs_elapsed_time:.4f} seconds to confirm.")
+        quit()
+    print(f"\nA path exists from start node [{start.row}, {start.col}] to end node [{end.row}, {end.col}].")   
+    print(f"BFS pre-check took {bfs_elapsed_time:.4f} seconds to confirm.")
 
 def toggle_search_area(grid):
         for row in grid:
@@ -324,6 +350,7 @@ def main(win, width):
     parser.add_argument("--size", type=int, default=50, help="Grid size. Grid is square, so 'size' value will apply to height AND width of the grid.")
     parser.add_argument("--use_map", type=str, help="Choose an image to use for a predefined map. Image dimensions required to match grid size. Overrides --size.")
     parser.add_argument("--path_only", type=int, nargs="+", help="Enter two points in the form [X1 Y1 X2 Y2]. Will only display the final path.")
+    parser.add_argument("-p", "--precheck", action="store_true", help="Run a BFS precheck to confirm that the start node can reach the end node")
     args = parser.parse_args()
 
     start_pos = None
@@ -362,6 +389,9 @@ def main(win, width):
         for row in grid:
             for node in row:
                 node.update_neighbors(grid, args.heuristic)
+
+        if args.precheck:
+            bfs_precheck(start_pos, end_pos)
 
         # Run algorithm with dummy draw function
         algorithm(lambda: None, grid, start_pos, end_pos, args.heuristic)
@@ -403,9 +433,15 @@ def main(win, width):
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and start_pos and end_pos:
+                    # Update neighbors for each node
                     for row in grid:
                         for node in row:
                             node.update_neighbors(grid, args.heuristic)
+
+                    if args.precheck:
+                        # Quick BFS check if the end node is reachable from the start node
+                        bfs_precheck(start_pos, end_pos)
+
                     algorithm(lambda: draw(WIN, grid, args.size, width), grid, start_pos, end_pos, args.heuristic)
 
                 if event.key == pygame.K_c:
